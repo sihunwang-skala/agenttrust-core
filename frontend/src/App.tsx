@@ -10,13 +10,31 @@ import { Btn } from "./ui";
 const TABS = ["Dashboard", "Delegation", "Agent Simulator", "Receipt Explorer", "Dispute & Recovery"] as const;
 type Tab = (typeof TABS)[number];
 
+const slug = (t: Tab) => t.toLowerCase().replace(/[^a-z]+/g, "-").replace(/^-|-$/g, "");
+
+function readHash(): { tab: Tab; d: string; tx: string } {
+  const [path, query = ""] = window.location.hash.replace(/^#\/?/, "").split("?");
+  const q = new URLSearchParams(query);
+  return { tab: TABS.find((t) => slug(t) === path) ?? "Dashboard", d: q.get("d") ?? "", tx: q.get("tx") ?? "" };
+}
+
 export default function App() {
-  const [tab, setTab] = useState<Tab>("Dashboard");
-  const [delegationId, setDelegationId] = useState<string>("");
-  const [txFocus, setTxFocus] = useState<string>("");
+  const initial = readHash();
+  const [tab, setTab] = useState<Tab>(initial.tab);
+  const [delegationId, setDelegationId] = useState<string>(initial.d);
+  const [txFocus, setTxFocus] = useState<string>(initial.tx);
   const [tick, setTick] = useState(0);
   const [health, setHealth] = useState<{ demo_reset_enabled?: boolean } | null>(null);
   const refresh = () => setTick((t) => t + 1);
+
+  // Deep-linkable state (#/receipts?d=...&tx=...) so each screen can be opened or captured directly.
+  useEffect(() => {
+    const q = new URLSearchParams();
+    if (delegationId) q.set("d", delegationId);
+    if (txFocus) q.set("tx", txFocus);
+    const h = `#/${slug(tab)}${q.toString() ? "?" + q.toString() : ""}`;
+    if (window.location.hash !== h) window.history.replaceState(null, "", h);
+  }, [tab, delegationId, txFocus]);
 
   useEffect(() => { api("/health").then(setHealth).catch(() => setHealth(null)); }, []);
 

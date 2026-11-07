@@ -14,6 +14,20 @@ When an AI agent buys or books something for you, three parties each hold only t
 
 AgentTrust sits between them: **User → Delegation → AI Agent → Independent Policy Gateway → (Mock) Merchant → Action Receipt → Verification & Recovery dashboard.**
 
+## Architecture
+
+![AgentTrust high-level architecture](docs/architecture.svg)
+
+The agent is treated as untrusted. Only the gateway's deterministic checks and signed statements count as evidence; everything the agent or user merely *says* stays labelled `SELF_REPORTED`.
+
+## Screens (running demo, synthetic data)
+
+| Delegation | Agent Simulator |
+|---|---|
+| ![Delegation](docs/screenshots/01-delegation.png) | ![Agent Simulator](docs/screenshots/02-agent-simulator.png) |
+| **Receipt Explorer** | **Dispute & Recovery** |
+| ![Receipt Explorer](docs/screenshots/03-receipt-explorer.png) | ![Dispute and Recovery](docs/screenshots/04-dispute-recovery.png) |
+
 ## What it does
 
 - **Delegation Manager**: explicit create → approve, versioned and immutable once approved; expiry and revocation enforced.
@@ -23,6 +37,21 @@ AgentTrust sits between them: **User → Delegation → AI Agent → Independent
 - **Offline verifier** (`verifier/agenttrust_verify.py`): checks hashes, signatures and chain with only a public key.
 - **Recovery & disputes**: compares evidence per party, locates the failing stage, lists violated conditions and *unknown* facts, simulates cancellation through the mock merchant. Responsibility is always `NOT_DETERMINED`. Cancel request/approval/rejection/state change are separate receipts. No refund, chargeback or payout exists.
 - **Web UI** (React + TS + Tailwind): Dashboard, Delegation, Agent Simulator (11 scenarios), Receipt Explorer, Dispute & Recovery.
+
+## What is tested
+
+70 backend tests (pytest) and 4 UI tests (vitest). Adversarial scenarios live in [`backend/tests/test_adversarial.py`](backend/tests/test_adversarial.py).
+
+| Scenario | Expected result | Status |
+|---|---|---|
+| Edited receipt (hash only / hash recomputed) | `HASH_MISMATCH` / `BAD_SIGNATURE` | tested |
+| Receipt deleted from the middle, reordered, duplicated, signature transplanted | chain / sequence / signature failure | tested |
+| Evidence level inflated (e.g. to `MERCHANT_CONFIRMED`, `PAYMENT_CONFIRMED`) | rejected | tested |
+| Same idempotency key replayed / reused with a different payload | executed once / `409` | tested |
+| Replayed approval or cancellation | no second execution, no double budget release | tested |
+| Concurrent requests against one budget | budget never exceeded | tested |
+| Malformed or hostile input to the offline verifier | reports problems, never crashes | tested |
+| **Newest receipts dropped, or an older genuine export replayed** | **not detected** (known limit, asserted by `test_known_limit_*`) | open |
 
 ## Quick start
 
@@ -53,7 +82,9 @@ python verifier/agenttrust_verify.py samples/sample_export.json --public-key sam
 - The delegation approval is a click on a **Demo Trusted Surface**. There is **no cryptographic proof that the user signed it**.
 - A hash chain plus a single server signature detects *alteration* by anyone without the key, but **cannot** prove the record is complete (trailing receipts could be dropped), cannot prove the signer is honest, and is not third-party independent. Extension points for external timestamping and independent witnesses are described in [ARCHITECTURE.md](ARCHITECTURE.md).
 - The Mock Merchant's signatures are **simulation evidence**, not real merchant attestations.
+- "Independently auditable" is not "independently assured": anyone can re-check a receipt with the public key, but the same operator holds the signing key. No third party has attested to anything here.
 - No authentication, rate limiting or tenant isolation: bind to localhost only. See [SECURITY.md](SECURITY.md).
+- Docker Compose and the GitHub Actions workflow are provided but were not exercised in the last verification pass.
 
 ## Relationship to AP2 and other standards
 
@@ -66,6 +97,7 @@ backend/   FastAPI app, SQLAlchemy models, tests, sample generator
 frontend/  React + Vite + Tailwind UI, vitest tests
 verifier/  standalone offline verifier (depends only on `cryptography`)
 samples/   synthetic signed receipts + public keys
+docs/      architecture diagram and UI screenshots
 ```
 
 ## Copyright & Usage

@@ -81,7 +81,12 @@ def verify(receipts: list[dict], pub_hex: str, merchant_pub_hex: str | None = No
             problems.append(f"{tag}: PAYMENT_CONFIRMED is not valid for this MVP")
         m = r.get("merchant_response")
         if merchant_pub_hex and m:
-            if m.get("payload_digest") != sha(canonical(m["payload"])) or not sig_ok(merchant_pub_hex, m["payload_digest"], m["signature"]):
+            try:
+                merchant_ok = (m["payload_digest"] == sha(canonical(m["payload"]))
+                               and sig_ok(merchant_pub_hex, m["payload_digest"], m["signature"]))
+            except Exception:  # noqa: BLE001  (malformed structure counts as invalid, never a crash)
+                merchant_ok = False
+            if not merchant_ok:
                 problems.append(f"{tag}: MERCHANT_SIGNATURE_INVALID")
         prev_hash, prev_seq = r.get("current_hash"), r.get("seq", prev_seq)
     return problems
@@ -96,6 +101,8 @@ def main(argv: list[str] | None = None) -> int:
     try:
         data = json.loads(Path(a.file).read_text())
         receipts = data["receipts"] if isinstance(data, dict) else data
+        if not isinstance(receipts, list) or not all(isinstance(r, dict) for r in receipts):
+            raise ValueError("expected a list of receipt objects")
         pub = load_key(a.public_key)
         mpub = load_key(a.merchant_public_key) if a.merchant_public_key else None
     except Exception as e:  # noqa: BLE001

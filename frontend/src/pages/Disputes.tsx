@@ -56,7 +56,7 @@ export default function Disputes({ tick, refresh, txFocus }: Shared) {
             </Card>
             <Card title="Discrepancies between sources">
               {analysis.discrepancies.length === 0 ? <p className="text-sm text-slate-500">None detected.</p> : (
-                <table className="w-full text-sm"><thead><tr className="text-left text-xs text-slate-500"><th>Stage</th><th>Field</th><th>Expected</th><th>Observed</th></tr></thead>
+                <table className="w-full text-sm [&_td]:pr-4 [&_td]:py-1 [&_td]:align-top [&_th]:pr-4"><thead><tr className="text-left text-xs text-slate-500"><th>Stage</th><th>Field</th><th>Expected</th><th>Observed</th></tr></thead>
                   <tbody>{analysis.discrepancies.map((d: any, i: number) => (
                     <tr key={i} className="border-t border-slate-100"><td>{d.stage}</td><td>{d.field}</td><td>{String(d.expected)}<div className="text-xs text-slate-500">{d.expected_source}</div></td><td>{String(d.observed)}<div className="text-xs text-slate-500">{d.observed_source}</div></td></tr>))}</tbody></table>)}
             </Card>

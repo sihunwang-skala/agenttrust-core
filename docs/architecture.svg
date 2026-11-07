@@ -1,0 +1,110 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 700" font-family="-apple-system,Segoe UI,Helvetica,Arial,sans-serif">
+  <title>AgentTrust high-level architecture</title>
+  <desc>Flow from user delegation to agent, independent policy gateway, mock merchant, signed receipt chain and verification and recovery, with evidence levels and what is not proven.</desc>
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#475569"/></marker>
+  </defs>
+  <rect width="1200" height="700" fill="#ffffff"/>
+  <text x="20" y="34" font-size="20" font-weight="700" fill="#0f172a">AgentTrust: delegate, check, record, verify</text>
+  <text x="20" y="56" font-size="12" fill="#475569">Local research prototype. Synthetic data, simulated merchant. No real payments. Deterministic code, no LLM, in the authorization path.</text>
+
+  <!-- row of stages -->
+  <g font-size="13" fill="#0f172a">
+    <g><rect x="20" y="90" width="170" height="130" rx="10" fill="#f1f5f9" stroke="#94a3b8"/>
+      <text x="105" y="114" text-anchor="middle" font-weight="700">1. User</text>
+      <text x="105" y="136" text-anchor="middle" font-size="12">Creates a delegation:</text>
+      <text x="105" y="153" text-anchor="middle" font-size="12">budget, merchants,</text>
+      <text x="105" y="170" text-anchor="middle" font-size="12">categories, returns,</text>
+      <text x="105" y="187" text-anchor="middle" font-size="12">expiry. Approves on a</text>
+      <text x="105" y="204" text-anchor="middle" font-size="12">Demo Trusted Surface</text></g>
+
+    <g><rect x="218" y="90" width="170" height="130" rx="10" fill="#f1f5f9" stroke="#94a3b8"/>
+      <text x="303" y="114" text-anchor="middle" font-weight="700">2. Delegation</text>
+      <text x="303" y="136" text-anchor="middle" font-size="12">Versioned, immutable</text>
+      <text x="303" y="153" text-anchor="middle" font-size="12">once approved.</text>
+      <text x="303" y="170" text-anchor="middle" font-size="12">Expiry and revocation</text>
+      <text x="303" y="187" text-anchor="middle" font-size="12">enforced by the gateway</text>
+      <text x="303" y="204" text-anchor="middle" font-size="12">clock.</text></g>
+
+    <g><rect x="416" y="90" width="170" height="130" rx="10" fill="#fef3c7" stroke="#d97706"/>
+      <text x="501" y="114" text-anchor="middle" font-weight="700">3. AI Agent</text>
+      <text x="501" y="136" text-anchor="middle" font-size="12">Not trusted. Sends an</text>
+      <text x="501" y="153" text-anchor="middle" font-size="12">action request with an</text>
+      <text x="501" y="170" text-anchor="middle" font-size="12">idempotency key and its</text>
+      <text x="501" y="187" text-anchor="middle" font-size="12">own claims</text>
+      <text x="501" y="204" text-anchor="middle" font-size="12">(SELF_REPORTED).</text></g>
+
+    <g><rect x="614" y="90" width="170" height="130" rx="10" fill="#e0e7ff" stroke="#4f46e5" stroke-width="2"/>
+      <text x="699" y="114" text-anchor="middle" font-weight="700">4. Policy Gateway</text>
+      <text x="699" y="136" text-anchor="middle" font-size="12">ALLOW / DENY /</text>
+      <text x="699" y="153" text-anchor="middle" font-size="12">REQUIRE_APPROVAL.</text>
+      <text x="699" y="170" text-anchor="middle" font-size="12">Checks limits against the</text>
+      <text x="699" y="187" text-anchor="middle" font-size="12">merchant-signed quote.</text>
+      <text x="699" y="204" text-anchor="middle" font-size="12">Atomic budget reserve.</text></g>
+
+    <g><rect x="812" y="90" width="170" height="130" rx="10" fill="#f1f5f9" stroke="#94a3b8"/>
+      <text x="897" y="114" text-anchor="middle" font-weight="700">5. Mock Merchant</text>
+      <text x="897" y="136" text-anchor="middle" font-size="12">Simulated. Signs quotes,</text>
+      <text x="897" y="153" text-anchor="middle" font-size="12">orders, cancellations</text>
+      <text x="897" y="170" text-anchor="middle" font-size="12">with its own demo key.</text>
+      <text x="897" y="187" text-anchor="middle" font-size="12">Fault injection: price</text>
+      <text x="897" y="204" text-anchor="middle" font-size="12">mismatch, error, timeout.</text></g>
+
+    <g><rect x="1010" y="90" width="170" height="130" rx="10" fill="#dcfce7" stroke="#16a34a"/>
+      <text x="1095" y="114" text-anchor="middle" font-weight="700">6. Action Receipt</text>
+      <text x="1095" y="136" text-anchor="middle" font-size="12">Canonical JSON, SHA-256</text>
+      <text x="1095" y="153" text-anchor="middle" font-size="12">hash chain, Ed25519</text>
+      <text x="1095" y="170" text-anchor="middle" font-size="12">signature. One receipt</text>
+      <text x="1095" y="187" text-anchor="middle" font-size="12">per decision, result,</text>
+      <text x="1095" y="204" text-anchor="middle" font-size="12">cancellation, dispute.</text></g>
+  </g>
+  <g stroke="#475569" stroke-width="2" marker-end="url(#a)" fill="none">
+    <path d="M190 155H214"/><path d="M388 155H412"/><path d="M586 155H610"/><path d="M784 155H808"/><path d="M982 155H1006"/>
+  </g>
+
+  <!-- gateway internals -->
+  <rect x="20" y="256" width="560" height="180" rx="10" fill="#fafafa" stroke="#cbd5e1"/>
+  <text x="36" y="280" font-size="14" font-weight="700" fill="#0f172a">Gateway, in order (single SQLite write transaction)</text>
+  <g font-size="12" fill="#1e293b">
+    <text x="36" y="304">1. Idempotency lookup. Same key + same payload returns the stored result.</text>
+    <text x="36" y="324">    Same key + different payload is rejected (409).</text>
+    <text x="36" y="344">2. Fetch and verify the merchant-signed quote. Agent claims are never trusted;</text>
+    <text x="36" y="362">    a mismatch is recorded as AGENT_CLAIM_MISMATCH.</text>
+    <text x="36" y="382">3. Pure policy function: collects every violation (limits, allow-lists, returns,</text>
+    <text x="36" y="400">    delivery, duplicates, delegation state). Reserve budget, append POLICY_DECISION.</text>
+    <text x="36" y="420">4. After commit: call the merchant, record EXECUTED, DISCREPANCY, FAILED or UNKNOWN.</text>
+  </g>
+
+  <!-- verification & recovery -->
+  <rect x="610" y="256" width="570" height="180" rx="10" fill="#fafafa" stroke="#cbd5e1"/>
+  <text x="626" y="280" font-size="14" font-weight="700" fill="#0f172a">7. Verification and recovery (after the fact)</text>
+  <g font-size="12" fill="#1e293b">
+    <text x="626" y="304">Offline verifier: public key only. Checks hash, signature, chain links, sequence.</text>
+    <text x="626" y="324">Receipt Explorer: verifiable evidence shown apart from unverified claims.</text>
+    <text x="626" y="344">Dispute analysis: failing stage, violated conditions, source discrepancies,</text>
+    <text x="626" y="362">    evidence by party, and a list of facts that are NOT established.</text>
+    <text x="626" y="382">Recovery: simulated cancellation through the mock merchant (it may refuse).</text>
+    <text x="626" y="402">Responsibility is always NOT_DETERMINED. No refund, chargeback or payout exists.</text>
+  </g>
+  <path d="M1095 220V238H895V256" stroke="#475569" stroke-width="2" fill="none" marker-end="url(#a)"/>
+
+  <!-- evidence levels -->
+  <text x="20" y="474" font-size="14" font-weight="700" fill="#0f172a">Evidence levels attached to every receipt</text>
+  <g font-size="12">
+    <rect x="20" y="486" width="230" height="52" rx="8" fill="#fef3c7" stroke="#d97706"/><text x="135" y="508" text-anchor="middle" font-weight="700" fill="#78350f">SELF_REPORTED</text><text x="135" y="526" text-anchor="middle" fill="#78350f">claims by agent or user</text>
+    <rect x="270" y="486" width="230" height="52" rx="8" fill="#e0e7ff" stroke="#4f46e5"/><text x="385" y="508" text-anchor="middle" font-weight="700" fill="#312e81">GATEWAY_VERIFIED</text><text x="385" y="526" text-anchor="middle" fill="#312e81">checked by deterministic code</text>
+    <rect x="520" y="486" width="230" height="52" rx="8" fill="#ccfbf1" stroke="#0d9488"/><text x="635" y="508" text-anchor="middle" font-weight="700" fill="#134e4a">MERCHANT_CONFIRMED</text><text x="635" y="526" text-anchor="middle" fill="#134e4a">simulated merchant signature</text>
+    <rect x="770" y="486" width="190" height="52" rx="8" fill="#f1f5f9" stroke="#64748b"/><text x="865" y="508" text-anchor="middle" font-weight="700" fill="#334155">UNKNOWN</text><text x="865" y="526" text-anchor="middle" fill="#334155">outcome not established</text>
+    <rect x="980" y="486" width="200" height="52" rx="8" fill="#ffffff" stroke="#dc2626" stroke-dasharray="5 4"/><text x="1080" y="508" text-anchor="middle" font-weight="700" fill="#991b1b">PAYMENT_CONFIRMED</text><text x="1080" y="526" text-anchor="middle" fill="#991b1b">never issued; verifier rejects</text>
+  </g>
+
+  <!-- not proven -->
+  <rect x="20" y="570" width="1160" height="112" rx="10" fill="#fff1f2" stroke="#e11d48"/>
+  <text x="36" y="594" font-size="14" font-weight="700" fill="#9f1239">What this prototype does NOT prove</text>
+  <g font-size="12" fill="#4c0519">
+    <text x="36" y="616">Not user-signed: delegation approval is a click on a demo surface, with no cryptographic proof that the user approved.</text>
+    <text x="36" y="634">Not third-party independent: one gateway key signs everything. The operator could re-sign, and dropped trailing receipts or a stale export cannot be detected.</text>
+    <text x="36" y="652">Not real merchant or payment evidence: merchant signatures are simulated; no payment provider exists. Not AP2-compatible or certified.</text>
+    <text x="36" y="670">Not a legal determination: no liability decision, refund guarantee or insurance.</text>
+  </g>
+</svg>
