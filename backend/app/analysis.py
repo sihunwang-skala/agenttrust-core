@@ -1,4 +1,4 @@
-"""Dispute analysis. Compares evidence per party and never assigns responsibility."""
+"""Dispute analysis (public reference version). Groups evidence per party and never assigns responsibility."""
 from __future__ import annotations
 
 from sqlalchemy import select
@@ -49,14 +49,6 @@ def analyze(db: Session, dispute: DisputeRow) -> dict:
                                      "on the Demo Trusted Surface, not cryptographically signed by the user"})
 
     discrepancies = []
-    if tx.quote:
-        q = tx.quote["payload"]
-        for f, qf in (("unit_price_krw", "unit_price_krw"), ("category", "category"), ("free_returns", "free_returns"),
-                      ("delivery_days", "delivery_days")):
-            claimed = tx.agent_claims.get(f)
-            if claimed is not None and claimed != q[qf]:
-                discrepancies.append({"stage": "POLICY_CHECK", "field": f, "expected": q[qf], "observed": claimed,
-                                      "expected_source": "MERCHANT_CONFIRMED (signed quote)", "observed_source": "SELF_REPORTED (agent)"})
     discrepancies += tx.discrepancies
     failed_stage = discrepancies[0]["stage"] if discrepancies else (
         "POLICY_CHECK" if tx.status == "DENIED" else "MERCHANT_EXECUTION" if tx.status in ("FAILED", "UNKNOWN") else None)
@@ -72,17 +64,13 @@ def analyze(db: Session, dispute: DisputeRow) -> dict:
                   "UNKNOWN": "No merchant response was received, so there is no order reference to cancel",
                   }.get(tx.status, f"Not cancellable in status {tx.status}")
 
-    unknowns = ["Whether any real payment settlement occurred: no payment provider is integrated (PAYMENT_CONFIRMED is never issued in this MVP)",
+    unknowns = ["Whether any real payment settlement occurred: no payment provider is integrated (PAYMENT_CONFIRMED is never issued)",
                 "Whether the human user actually intended or authorized this purchase: approval was on a Demo Trusted Surface without a user signature",
                 "Whether the simulated merchant's signed statements reflect real-world fulfilment"]
-    if tx.status == "UNKNOWN":
-        unknowns.insert(0, "The merchant outcome is unknown: the order may or may not have been created")
-    if tx.status == "FAILED":
-        unknowns.insert(0, "The merchant reported an error; whether any side effect occurred on the merchant side is not confirmed")
-    if any(d["stage"] == "MERCHANT_EXECUTION" for d in discrepancies):
-        unknowns.insert(0, "Why the merchant's charged amount differs from its own signed quote is not established by the available evidence")
-    if any(d["stage"] == "POLICY_CHECK" for d in discrepancies):
-        unknowns.insert(0, "Whether the agent's incorrect claim was a mistake or intentional is not established")
+    if tx.status in ("UNKNOWN", "FAILED"):
+        unknowns.insert(0, "The merchant-side outcome is unknown: it is not established by the available evidence")
+    if discrepancies:
+        unknowns.insert(0, "Why the sources disagree is not established by the available evidence")
 
     return {"dispute_id": dispute.dispute_id, "transaction_id": tx.transaction_id, "dispute_status": dispute.status,
             "transaction_status": tx.status, "stages": stages, "violated_conditions": violated,

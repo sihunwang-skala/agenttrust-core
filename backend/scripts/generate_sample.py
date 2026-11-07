@@ -18,7 +18,7 @@ with tempfile.TemporaryDirectory() as tmp:
         d = c.post("/api/v1/delegations", json={"agent_id": "agent_demo", "total_budget_krw": 600000, "per_item_max_krw": 200000,
                                                 "allowed_categories": ["Electronics"], "allowed_merchants": ["m_techmart", "m_gadgethub"]}).json()
         c.post(f"/api/v1/delegations/{d['delegation_id']}/approve")
-        for s in ("normal_purchase", "free_returns_violation", "merchant_mismatch", "cancel_request"):
+        for s in ("normal_purchase", "over_budget", "merchant_mismatch", "cancel_request"):
             c.post(f"/api/v1/simulator/scenarios/{s}/run", params={"delegation_id": d["delegation_id"]})
         ex = c.get("/api/v1/receipts/export").json()
     OUT.mkdir(exist_ok=True)

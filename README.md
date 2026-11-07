@@ -28,19 +28,27 @@ The agent is treated as untrusted. Only the gateway's deterministic checks and s
 | **Receipt Explorer** | **Dispute & Recovery** |
 | ![Receipt Explorer](docs/screenshots/03-receipt-explorer.png) | ![Dispute and Recovery](docs/screenshots/04-dispute-recovery.png) |
 
+## Public reference edition
+
+This repository is the **public, portfolio edition**. It contains a complete working demo (gateway, receipts, offline verifier, UI) with a deliberately **simplified reference rule set and dispute analysis**. A fuller implementation exists outside this repository and is not published. Consequences you should know about:
+
+- Delegations still store `require_free_returns` and `max_delivery_days`, but this edition does **not enforce** them.
+- Agent-supplied `claimed` values are recorded as `SELF_REPORTED` evidence but are not cross-checked against the signed quote here.
+- Dispute analysis is simpler than a production analysis would be.
+
 ## What it does
 
 - **Delegation Manager**: explicit create → approve, versioned and immutable once approved; expiry and revocation enforced.
-- **Independent Policy Gateway**: deterministic code (no LLM) returns `ALLOW` / `DENY` / `REQUIRE_APPROVAL`. It checks delegation validity, agent identity, merchant and category allow-lists, per-item limit, remaining budget, free returns, delivery deadline, duplicates, and agent claims against a **merchant-signed quote**. Budget reservation, idempotency and receipt-chain append are atomic (SQLite `BEGIN IMMEDIATE`).
+- **Independent Policy Gateway**: deterministic code (no LLM) returns `ALLOW` / `DENY` / `REQUIRE_APPROVAL`. The public reference rule set checks delegation validity, agent identity, merchant and category allow-lists, per-item limit, remaining budget and duplicates, using the price from a **merchant-signed quote**. Budget reservation, idempotency and receipt-chain append are atomic (SQLite `BEGIN IMMEDIATE`).
 - **Action Receipts**: structured, canonical-JSON, SHA-256 hash-chained, Ed25519-signed. Viewable as timeline or JSON.
 - **Evidence levels**: `SELF_REPORTED`, `GATEWAY_VERIFIED`, `MERCHANT_CONFIRMED` (simulated merchant signature), `UNKNOWN`. `PAYMENT_CONFIRMED` is defined by the concept but **never issued** here.
 - **Offline verifier** (`verifier/agenttrust_verify.py`): checks hashes, signatures and chain with only a public key.
 - **Recovery & disputes**: compares evidence per party, locates the failing stage, lists violated conditions and *unknown* facts, simulates cancellation through the mock merchant. Responsibility is always `NOT_DETERMINED`. Cancel request/approval/rejection/state change are separate receipts. No refund, chargeback or payout exists.
-- **Web UI** (React + TS + Tailwind): Dashboard, Delegation, Agent Simulator (11 scenarios), Receipt Explorer, Dispute & Recovery.
+- **Web UI** (React + TS + Tailwind): Dashboard, Delegation, Agent Simulator (9 scenarios), Receipt Explorer, Dispute & Recovery.
 
 ## What is tested
 
-70 backend tests (pytest) and 4 UI tests (vitest). Adversarial scenarios live in [`backend/tests/test_adversarial.py`](backend/tests/test_adversarial.py).
+67 backend tests (pytest) and 4 UI tests (vitest). Adversarial scenarios live in [`backend/tests/test_adversarial.py`](backend/tests/test_adversarial.py).
 
 | Scenario | Expected result | Status |
 |---|---|---|

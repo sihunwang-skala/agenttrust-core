@@ -1,4 +1,9 @@
-"""Deterministic policy evaluation. Pure function: no I/O, no LLM, no randomness."""
+"""Deterministic policy evaluation. Pure function: no I/O, no LLM, no randomness.
+
+PUBLIC REFERENCE RULE SET: delegation validity, agent identity, merchant/category allow-lists, per-item limit, budget and
+duplicates, evaluated against the merchant-signed quote. The fuller rule set of the private implementation is not part of
+this repository.
+"""
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -32,7 +37,7 @@ class PolicyResult:
     amount_krw: int = 0
 
     def reason(self) -> dict:
-        return {"violations": self.violations, "checks": self.checks, "engine": "deterministic/1"}
+        return {"violations": self.violations, "checks": self.checks, "engine": "deterministic/reference-1"}
 
 
 def evaluate(i: PolicyInput) -> PolicyResult:
@@ -54,12 +59,6 @@ def evaluate(i: PolicyInput) -> PolicyResult:
     q = i.quote
     if q is not None:
         res.amount_krw = q["unit_price_krw"] * i.quantity
-        for f, qv in (("unit_price_krw", q["unit_price_krw"]), ("category", q["category"]),
-                      ("free_returns", q["free_returns"]), ("delivery_days", q["delivery_days"])):
-            if f in i.claims and i.claims[f] is not None:
-                check(f"claim_{f}_consistent", i.claims[f] == qv, "AGENT_CLAIM_MISMATCH",
-                      f"Agent claimed {f}={i.claims[f]!r} but merchant-signed quote says {qv!r}",
-                      field=f, claimed=i.claims[f], verified=qv)
         if d is not None and i.delegation_problem is None:
             check("category_allowed", q["category"] in d["allowed_categories"], "CATEGORY_NOT_ALLOWED",
                   f"Category {q['category']} is not allowed")
@@ -68,10 +67,6 @@ def evaluate(i: PolicyInput) -> PolicyResult:
             remaining = d["total_budget_krw"] - i.spent_krw
             check("budget_remaining", res.amount_krw <= remaining, "BUDGET_EXCEEDED",
                   f"Amount {res.amount_krw} exceeds remaining budget {remaining}", remaining_krw=remaining)
-            check("free_returns", (not d["require_free_returns"]) or q["free_returns"], "FREE_RETURNS_REQUIRED",
-                  "Free returns are required but not offered")
-            check("delivery_deadline", q["delivery_days"] <= d["max_delivery_days"], "DELIVERY_TOO_SLOW",
-                  f"Delivery {q['delivery_days']}d exceeds limit {d['max_delivery_days']}d")
     check("not_duplicate", not i.duplicate_found, "DUPLICATE_SUSPECTED",
           "Same agent/delegation/product/quantity was already submitted within the duplicate window")
 

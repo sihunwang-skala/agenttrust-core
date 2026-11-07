@@ -21,7 +21,7 @@ CLI = Path(__file__).resolve().parents[2] / "verifier" / "agenttrust_verify.py"
 
 
 def _populate(client, deleg, n=3):
-    for p in ["p_headphones", "p_webcam", "p_cable"][:n]:
+    for p in ["p_headphones", "p_sofa", "p_cable"][:n]:
         act(client, deleg["delegation_id"], product=p)
 
 
@@ -125,7 +125,7 @@ def test_known_limit_stale_export_replay_is_not_detected(client, deleg):
     """An older, genuine export looks valid forever; there is no freshness proof or external anchor."""
     act(client, deleg["delegation_id"])
     old = _export(client)
-    act(client, deleg["delegation_id"], product="p_webcam")
+    act(client, deleg["delegation_id"], product="p_sofa")
     assert _problems(old) == []
     assert len(_export(client)["receipts"]) > len(old["receipts"])
 

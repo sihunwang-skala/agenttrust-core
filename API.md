@@ -32,6 +32,6 @@ Example action:
 ```json
 {"agent_id":"agent_demo","delegation_id":"dlg_…","idempotency_key":"order-0001",
  "parameters":{"merchant_id":"m_techmart","product_id":"p_headphones","quantity":1,
-               "claimed":{"free_returns":true},"rationale":"User asked for headphones"}}
+               "claimed":{},"rationale":"User asked for headphones"}}
 ```
-Violation codes: `DELEGATION_NOT_FOUND|NOT_APPROVED|REVOKED|EXPIRED`, `AGENT_MISMATCH`, `MERCHANT_NOT_ALLOWED`, `CATEGORY_NOT_ALLOWED`, `PER_ITEM_LIMIT_EXCEEDED`, `BUDGET_EXCEEDED`, `FREE_RETURNS_REQUIRED`, `DELIVERY_TOO_SLOW`, `PRODUCT_NOT_FOUND`, `QUOTE_SIGNATURE_INVALID`, `AGENT_CLAIM_MISMATCH`, `DUPLICATE_SUSPECTED`.
+Violation codes (public reference rule set): `DELEGATION_NOT_FOUND|NOT_APPROVED|REVOKED|EXPIRED`, `AGENT_MISMATCH`, `MERCHANT_NOT_ALLOWED`, `CATEGORY_NOT_ALLOWED`, `PER_ITEM_LIMIT_EXCEEDED`, `BUDGET_EXCEEDED`, `PRODUCT_NOT_FOUND`, `QUOTE_SIGNATURE_INVALID`, `DUPLICATE_SUSPECTED`.

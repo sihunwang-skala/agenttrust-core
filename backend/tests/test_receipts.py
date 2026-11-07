@@ -14,7 +14,7 @@ CLI = Path(__file__).resolve().parents[2] / "verifier" / "agenttrust_verify.py"
 
 def _populate(client, deleg):
     act(client, deleg["delegation_id"])
-    act(client, deleg["delegation_id"], product="p_webcam")
+    act(client, deleg["delegation_id"], product="p_sofa")
 
 
 def _export(client):

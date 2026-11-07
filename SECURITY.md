@@ -8,7 +8,7 @@ Schema validation (Pydantic, `extra=forbid`), consistent error envelope, determi
 ## Threat model (summary)
 | Threat | Current status |
 |---|---|
-| Agent exceeds delegated limits / lies about product facts | Mitigated: gateway uses merchant-signed quote, not agent claims; mismatches denied. |
+| Agent exceeds delegated limits | Mitigated for the enforced rules (budget, per-item, allow-lists): the gateway prices from the merchant-signed quote, not agent claims. Free-returns/delivery limits and claim cross-checks are not enforced in this public edition. |
 | Concurrent requests overspend or double-execute | Mitigated for single-node SQLite (write lock at BEGIN, unique idempotency constraint); tested. |
 | Receipt content edited after the fact | Detected by hash + signature, including by the offline verifier. |
 | Operator edits and re-signs / truncates the chain | **Not mitigated.** The single gateway key can re-sign; trailing deletion is undetectable. Needs external anchoring and witnesses. |

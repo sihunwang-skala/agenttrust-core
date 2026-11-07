@@ -28,24 +28,11 @@ def test_cumulative_budget_enforced(client, deleg):
     assert t["status"] == "DENIED"
 
 
-def test_free_returns_violation(client, deleg):
-    t = act(client, deleg["delegation_id"], product="p_webcam").json()
-    assert t["status"] == "DENIED"
-    assert "FREE_RETURNS_REQUIRED" in [v["code"] for v in t["policy_reason"]["violations"]]
-
-
-def test_false_agent_claim_is_denied(client, deleg):
-    t = act(client, deleg["delegation_id"], product="p_webcam", claimed={"free_returns": True}).json()
-    codes = [v["code"] for v in t["policy_reason"]["violations"]]
-    assert "AGENT_CLAIM_MISMATCH" in codes and t["status"] == "DENIED"
-
-
 def test_other_violations(client, deleg):
     did = deleg["delegation_id"]
     assert "MERCHANT_NOT_ALLOWED" in [v["code"] for v in act(client, did, product="p_shady", merchant="m_shadydeals").json()["policy_reason"]["violations"]]
     assert "CATEGORY_NOT_ALLOWED" in [v["code"] for v in act(client, did, product="p_sofa").json()["policy_reason"]["violations"]]
     assert "PER_ITEM_LIMIT_EXCEEDED" in [v["code"] for v in act(client, did, product="p_laptop", merchant="m_gadgethub").json()["policy_reason"]["violations"]]
-    assert "DELIVERY_TOO_SLOW" in [v["code"] for v in act(client, did, product="p_slowdock", merchant="m_gadgethub").json()["policy_reason"]["violations"]]
     assert "PRODUCT_NOT_FOUND" in [v["code"] for v in act(client, did, product="p_nope").json()["policy_reason"]["violations"]]
     assert "AGENT_MISMATCH" in [v["code"] for v in act(client, did, agent="agent_evil").json()["policy_reason"]["violations"]]
 

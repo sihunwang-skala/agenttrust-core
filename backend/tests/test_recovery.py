@@ -28,7 +28,7 @@ def test_cancellation_rejected_by_merchant(client, deleg):
 
 
 def test_cannot_cancel_denied_failed_or_unknown(client, deleg):
-    for p in ("p_webcam", "p_flaky", "p_timeout"):
+    for p in ("p_sofa", "p_flaky", "p_timeout"):
         t = act(client, deleg["delegation_id"], product=p).json()
         r = client.post(f"{API}/transactions/{t['transaction_id']}/cancel", json={"reason": "x"})
         assert r.status_code == 409 and r.json()["error"]["code"] == "NOT_CANCELLABLE"
@@ -58,15 +58,6 @@ def test_insufficient_evidence_never_assigns_responsibility(client, deleg):
     assert any("unknown" in u.lower() for u in a["unknown_facts"])
     blob = str(a).lower()
     assert "at_fault" not in blob and "liable" not in blob.replace("legal responsibility", "")
-
-
-def test_agent_false_claim_unknown_intent(client, deleg):
-    t = act(client, deleg["delegation_id"], product="p_webcam", claimed={"free_returns": True}).json()
-    d = _dispute(client, t["transaction_id"], "agent lied?")
-    a = client.get(f"{API}/disputes/{d['dispute_id']}/analysis").json()
-    assert a["failed_stage"] == "POLICY_CHECK" and a["responsibility"]["determination"] == "NOT_DETERMINED"
-    assert any("intentional" in u for u in a["unknown_facts"])
-    assert any(e["level"] == "SELF_REPORTED" for e in a["evidence_by_party"]["agent"])
 
 
 def test_simulator_and_dashboard(client, deleg):

@@ -68,10 +68,10 @@
   <g font-size="12" fill="#1e293b">
     <text x="36" y="304">1. Idempotency lookup. Same key + same payload returns the stored result.</text>
     <text x="36" y="324">    Same key + different payload is rejected (409).</text>
-    <text x="36" y="344">2. Fetch and verify the merchant-signed quote. Agent claims are never trusted;</text>
-    <text x="36" y="362">    a mismatch is recorded as AGENT_CLAIM_MISMATCH.</text>
-    <text x="36" y="382">3. Pure policy function: collects every violation (limits, allow-lists, returns,</text>
-    <text x="36" y="400">    delivery, duplicates, delegation state). Reserve budget, append POLICY_DECISION.</text>
+    <text x="36" y="344">2. Fetch and verify the merchant-signed quote. The price comes from the quote,</text>
+    <text x="36" y="362">    never from the agent.</text>
+    <text x="36" y="382">3. Pure policy function (reference rule set): collects every violation (limits,</text>
+    <text x="36" y="400">    allow-lists, duplicates, delegation state). Reserve budget, append POLICY_DECISION.</text>
     <text x="36" y="420">4. After commit: call the merchant, record EXECUTED, DISCREPANCY, FAILED or UNKNOWN.</text>
   </g>
 

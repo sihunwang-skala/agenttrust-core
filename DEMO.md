@@ -1,12 +1,12 @@
 # Demo walkthrough (all data synthetic, merchant simulated)
 
-Start backend + frontend (README), open http://localhost:5173. Use **Reset demo data** (header) between runs. Defaults: budget 300,000 KRW, per-item 200,000, Electronics, free returns required.
+Start backend + frontend (README), open http://localhost:5173. Use **Reset demo data** (header) between runs. Defaults: budget 300,000 KRW, per-item 200,000, Electronics.
 
 1. **Delegation** → *Create delegation*, then *Approve (demo surface)*. Note the notice that this is not a user signature. Select it for the simulator.
 2. **Agent Simulator** (scenarios consume budget, so create a fresh delegation if later ones are denied for budget):
    - *Normal purchase* → ALLOW, EXECUTED (120,000 KRW).
    - *Over-budget attempt* → DENY `BUDGET_EXCEEDED`.
-   - *Free-returns violation* → DENY `FREE_RETURNS_REQUIRED`; *Agent makes a false claim* → also `AGENT_CLAIM_MISMATCH`.
+   - *Unlisted merchant* → DENY `MERCHANT_NOT_ALLOWED`.
    - *Duplicate request* → second submit shows "idempotent replay", only one transaction.
    - *Merchant mismatch* → DISCREPANCY: quoted 80,000, merchant-signed confirmation charged 95,000.
    - *Merchant error* → FAILED, budget released. *Merchant timeout* → UNKNOWN, budget stays reserved.
