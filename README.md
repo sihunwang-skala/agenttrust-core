@@ -1,3 +1,5 @@
+**English** · [한국어](README.ko.md)
+
 # AgentTrust
 
 **An independent AI Agent Trust Layer (AATL)** for verifying, recording and recovering AI agent actions. Research prototype.
