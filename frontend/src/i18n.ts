@@ -32,7 +32,7 @@ const ko: Record<string, string> = {
   "Run": "실행", "Result: ": "실행 결과: ", "idempotent replay: no second execution": "멱등 재요청: 추가 실행 없음",
   "authorized ": "승인 금액 ", "merchant charged ": "판매자 청구 금액 ", "Approve this action": "이 작업 승인",
   "Reject": "거부", "View receipts for ": "영수증 보기: ", "Mock merchant catalog (synthetic, simulated)": "모의 판매자 상품 목록(합성 데이터)",
-  "Product": "상품", "Merchant": "판매자", "Category": "카테고리", "Price": "가격", "Free returns": "무료 반품",
+  "Product": "상품", "Merchant": "판매자", "Category": "카테고리", "Price": "가격",
   "Delivery": "배송", "Cancellable": "취소 가능", "yes": "예", "no": "아니요", "true": "예", "false": "아니요",
   "1. Select a transaction": "1. 거래 선택", "Transaction": "거래", "Choose…": "선택하세요…", "Dispute reason": "분쟁 사유",
   "This purchase looks wrong": "이 구매 내역이 잘못된 것 같습니다", "Open dispute": "분쟁 접수", "Disputes": "분쟁",
@@ -81,7 +81,7 @@ export function translate(text: string, language: Language) {
   if (language === "en") return text;
   const trimmed = text.trim();
   if (ko[trimmed]) return text.replace(trimmed, ko[trimmed]);
-  return partial.reduce((out, [from, to]) => out.replaceAll(from, to), text);
+  return partial.reduce((out, [from, to]) => out.split(from).join(to), text);
 }
 
 export function localizeDom(root: HTMLElement, language: Language) {
